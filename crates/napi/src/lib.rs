@@ -90,7 +90,7 @@ mod error;
 mod js_values;
 mod status;
 mod task;
-#[cfg(all(feature = "tokio_rt", feature = "napi4"))]
+#[cfg(all(any(feature = "tokio_rt", feature = "runtime_executor"), feature = "napi4"))]
 mod tokio_runtime;
 mod value_type;
 #[cfg(feature = "napi3")]
@@ -158,7 +158,7 @@ macro_rules! assert_type_of {
 pub mod bindgen_prelude {
   #[cfg(all(feature = "compat-mode", not(feature = "noop")))]
   pub use crate::bindgen_runtime::register_module_exports;
-  #[cfg(feature = "tokio_rt")]
+  #[cfg(any(feature = "tokio_rt", feature = "runtime_executor"))]
   pub use crate::tokio_runtime::*;
   pub use crate::{
     assert_type_of, bindgen_runtime::*, check_pending_exception, check_status,
@@ -169,11 +169,12 @@ pub mod bindgen_prelude {
   pub use ::tracing;
 
   // This function's signature must be kept in sync with the one in tokio_runtime.rs, otherwise napi
-  // will fail to compile without the `tokio_rt` feature.
+  // will fail to compile without an async runtime feature.
 
-  /// If the feature `tokio_rt` has been enabled this will enter the runtime context and
-  /// then call the provided closure. Otherwise it will just call the provided closure.
-  #[cfg(not(all(feature = "tokio_rt", feature = "napi4")))]
+  /// If an async runtime (`tokio_rt` or `runtime_executor`) is enabled this
+  /// enters the runtime context and then calls the provided closure.
+  /// Otherwise it just calls the provided closure.
+  #[cfg(not(all(any(feature = "tokio_rt", feature = "runtime_executor"), feature = "napi4")))]
   pub fn within_runtime_if_available<F: FnOnce() -> T, T>(f: F) -> T {
     f()
   }
@@ -185,7 +186,7 @@ pub mod __private {
     get_class_constructor, iterator::create_iterator, register_class, ___CALL_FROM_FACTORY,
   };
 
-  #[cfg(feature = "tokio_rt")]
+  #[cfg(any(feature = "tokio_rt", feature = "runtime_executor"))]
   pub use crate::bindgen_runtime::async_iterator::create_async_iterator;
 
   use crate::sys;

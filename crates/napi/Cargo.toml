@@ -65,6 +65,12 @@ tokio_signal = ["tokio/signal"]
 tokio_sync = ["tokio/sync"]
 tokio_test_util = ["tokio/test-util"]
 tokio_time = ["tokio/time"]
+# Mutually exclusive with `tokio_rt`. Uses futures::executor::ThreadPool +
+# pollster to drive `#[napi] async fn` Promises instead of a tokio runtime.
+# Trades tokio's work-stealing scheduler for a smaller binary and no tokio
+# runtime in the final image. The same async-fn surface area at the JS layer
+# is preserved.
+runtime_executor = ["pollster", "futures/thread-pool", "napi4"]
 dyn-symbols = ["napi-sys/dyn-symbols"]
 # Add a runtime Node version detection
 node_version_detect = []
@@ -131,6 +137,10 @@ version = "0.1"
 
 [dependencies.futures]
 version = "0.3"
+
+[dependencies.pollster]
+optional = true
+version = "0.4"
 
 [build-dependencies]
 napi-build = { path = "../build", version = "2.3.2" }
